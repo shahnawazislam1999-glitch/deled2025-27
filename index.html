@@ -4,15 +4,7 @@
   <meta charset="UTF-8">
   <title>My Photo Gallery</title>
 
-  <!-- ================= CSS START ================= -->
   <style>
-	footer {
-  background: #222;
-  color: white;
-  padding: 15px;
-  font-size: 14px;
-  margin-top: 20px;
-}
     body {
       margin: 0;
       font-family: Arial, sans-serif;
@@ -20,6 +12,7 @@
       text-align: center;
     }
 
+    /* HEADER */
     h1 {
       padding: 20px;
       background: #222;
@@ -27,29 +20,111 @@
       margin: 0;
     }
 
-    /* Responsive grid */
+    .header-sub {
+      display: block;
+      font-size: 12px;
+      font-weight: normal;
+      margin-top: 5px;
+      color: #ccc;
+    }
+
+    /* MOSAIC GALLERY GRID */
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      /* Base layout: 2 columns for mobile, auto-sizing up */
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-auto-rows: 200px; /* Base height for standard images */
+      grid-auto-flow: dense; /* CRITICAL: Fills in empty spaces tightly */
       gap: 15px;
-      padding: 20px;
+      padding: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    /* Image styling (AUTO HEIGHT FIXED HERE) */
-    .gallery img {
+    /* Desktop Layout Overrides */
+    @media (min-width: 768px) {
+      .gallery {
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: 250px; 
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .gallery {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    /* IMAGE WRAPPER & LOADING ANIMATION */
+    .img-wrapper {
       width: 100%;
-      height: auto; /* 🔥 auto height */
-      border-radius: 12px;
-      transition: 0.3s;
+      height: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      position: relative;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      
+      /* Shimmer background for slow loading */
+      background: linear-gradient(90deg, #e0e0e0 25%, #f4f4f4 50%, #e0e0e0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite linear;
     }
 
-    .gallery img:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    /* The Shimmer Keyframes */
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
-    /* ================= POPUP (LIGHTBOX) ================= */
+    .img-wrapper:hover {
+      transform: scale(1.03);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+
+    /* IMAGE STYLE */
+    .img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* 'cover' fills the grid cell completely */
+      opacity: 0; /* Hidden initially while loading */
+      transition: opacity 0.6s ease-in-out; /* Smooth fade-in once loaded */
+    }
+
+    /* Class added via JS when image fully loads */
+    .img-wrapper.loaded img {
+      opacity: 1;
+    }
+    
+    /* Stop animation once loaded to save CPU */
+    .img-wrapper.loaded {
+      animation: none;
+      background: none;
+    }
+
+    /* AUTOMATIC PATTERN FOR NEW IMAGES (Targeting the wrapper now) */
+    /* Every 1st image in a block of 7 will be a large square */
+    .gallery .img-wrapper:nth-child(7n + 1) {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+    
+    /* Every 2nd and 5th image will be a tall vertical rectangle */
+    .gallery .img-wrapper:nth-child(7n + 2),
+    .gallery .img-wrapper:nth-child(7n + 5) {
+      grid-row: span 2;
+    }
+    
+    /* Every 4th image will be a wide horizontal rectangle */
+    .gallery .img-wrapper:nth-child(7n + 4) {
+      grid-column: span 2;
+    }
+    
+    /* The 3rd, 6th, and 7th images default to standard 1x1 squares automatically */
+
+    /* POPUP */
     .popup {
       position: fixed;
       top: 0;
@@ -57,7 +132,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0,0,0,0.9);
-      display: none; /* hidden by default */
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
@@ -67,9 +142,9 @@
       max-width: 90%;
       max-height: 90%;
       border-radius: 10px;
+      object-fit: contain;
     }
 
-    /* Close button */
     .popup span {
       position: absolute;
       top: 20px;
@@ -77,73 +152,146 @@
       font-size: 35px;
       color: white;
       cursor: pointer;
+      transition: 0.2s;
+    }
+    
+    .popup span:hover {
+      color: #ff4d4d;
+    }
+
+    /* FOOTER */
+    footer {
+      background: #222;
+      color: white;
+      padding: 15px;
+      font-size: 14px;
+      margin-top: 20px;
     }
   </style>
-  <!-- ================= CSS END ================= -->
-
 </head>
 
 <body>
 
-  <h1>D.El.Ed 2025-2027</h1>
+  <h1>
+    D.El.Ed 2025-2027 <br>
+    <span class="header-sub">
+      This photo gallery website is developed by Raj | Contact No: 83999 64358
+    </span>
+  </h1>
 
   <div class="gallery" id="gallery"></div>
 
-  <!-- POPUP STRUCTURE -->
   <div class="popup" id="popup">
     <span onclick="closePopup()">&times;</span>
     <img id="popupImg">
   </div>
 
-  <!-- ================= JAVASCRIPT START ================= -->
   <script>
-
-    // Your image list
+    // Add as many images as you want here. 
+    // The CSS will automatically size them to fit the attractive grid!
     const images = [
-      "image/PHTO.jpg",
-      "image/myp.png",
-      "image/scrn.png"
+
+"image/d0.jpeg",
+      "image/d1.jpeg",
+      "image/d2.jpeg",
+      "image/d3.jpeg",
+      
+       "image/d4.jpeg",
+ "image/d5.jpeg",
+ "image/d6.jpeg",
+
+
+ "image/d7.jpeg",
+      "image/d8.jpeg",
+      "image/d9.jpeg",
+      
+       "image/d10.jpeg",
+ "image/d11.jpeg",
+ "image/d12.jpeg",
+
+"image/d13.jpeg",
+      "image/d14.jpeg",
+      "image/d15.jpeg",
+      
+       "image/d16.jpeg",
+"image/d17.jpeg",
+
+
+
+
+
+
+"image/d18.jpeg",
+      "image/d19.jpeg",
+      "image/d20.jpeg",
+      
+       "image/d21.jpeg",
+ "image/d22.jpeg",
+ "image/d23.jpeg",
+
+"image/d24.jpeg",
+      "image/d25.jpeg",
+      "image/d26.jpeg",
+      
+       "image/d27.jpeg",
+
+
+       "image/d29.jpeg",
+
+
+
+
+
+
+
+
+
+
     ];
 
     const gallery = document.getElementById("gallery");
     const popup = document.getElementById("popup");
     const popupImg = document.getElementById("popupImg");
 
-    // Create gallery images
     images.forEach((src) => {
+      // Create a wrapper for the loading animation
+      const wrapper = document.createElement("div");
+      wrapper.className = "img-wrapper";
+
       const img = document.createElement("img");
       img.src = src;
 
-      // 👉 CLICK EVENT (OPEN POPUP)
-      img.onclick = () => {
+      // When the image finishes loading, add the 'loaded' class to trigger the fade-in
+      img.onload = () => {
+        wrapper.classList.add("loaded");
+      };
+
+      // Ensure popup still works
+      wrapper.onclick = () => {
         popup.style.display = "flex";
         popupImg.src = src;
       };
 
-      gallery.appendChild(img);
+      wrapper.appendChild(img);
+      gallery.appendChild(wrapper);
     });
 
-    // 👉 CLOSE POPUP
     function closePopup() {
       popup.style.display = "none";
     }
 
-    // 👉 Also close when clicking outside image
+    // Close when clicking outside the image
     popup.onclick = (e) => {
       if (e.target !== popupImg) {
         closePopup();
       }
     };
-
   </script>
-  <!-- ================= JAVASCRIPT END ================= -->
 
 </body>
 
 <footer>
   <p>This website is developed by Raj | Contact No: 83999 64358</p>
 </footer>
-
-
 
 </html>
