@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Photo Gallery</title>
+
+  <!-- ================= CSS START ================= -->
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      text-align: center;
+    }
+
+    h1 {
+      padding: 20px;
+      background: #222;
+      color: white;
+      margin: 0;
+    }
+
+    /* Responsive grid */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+
+    /* Image styling (AUTO HEIGHT FIXED HERE) */
+    .gallery img {
+      width: 100%;
+      height: auto; /* 🔥 auto height */
+      border-radius: 12px;
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .gallery img:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    /* ================= POPUP (LIGHTBOX) ================= */
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none; /* hidden by default */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .popup img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 10px;
+    }
+
+    /* Close button */
+    .popup span {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 35px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+  <!-- ================= CSS END ================= -->
+
+</head>
+
+<body>
+
+  <h1>My Photo Gallery</h1>
+
+  <div class="gallery" id="gallery"></div>
+
+  <!-- POPUP STRUCTURE -->
+  <div class="popup" id="popup">
+    <span onclick="closePopup()">&times;</span>
+    <img id="popupImg">
+  </div>
+
+  <!-- ================= JAVASCRIPT START ================= -->
+  <script>
+
+    // Your image list
+    const images = [
+      "image/PHTO.jpg",
+      "image/myp.png",
+      "image/scrn.png"
+    ];
+
+    const gallery = document.getElementById("gallery");
+    const popup = document.getElementById("popup");
+    const popupImg = document.getElementById("popupImg");
+
+    // Create gallery images
+    images.forEach((src) => {
+      const img = document.createElement("img");
+      img.src = src;
+
+      // 👉 CLICK EVENT (OPEN POPUP)
+      img.onclick = () => {
+        popup.style.display = "flex";
+        popupImg.src = src;
+      };
+
+      gallery.appendChild(img);
+    });
+
+    // 👉 CLOSE POPUP
+    function closePopup() {
+      popup.style.display = "none";
+    }
+
+    // 👉 Also close when clicking outside image
+    popup.onclick = (e) => {
+      if (e.target !== popupImg) {
+        closePopup();
+      }
+    };
+
+  </script>
+  <!-- ================= JAVASCRIPT END ================= -->
+
+</body>
+</html>
