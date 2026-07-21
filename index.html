@@ -70,14 +70,10 @@
                 return; 
             }
 
-            // 2. Check for Iframe (Online Editors like OneCompiler)
+            // 2. Check for Iframe (Online Editors)
             if (window.self !== window.top) {
                 outputDiv.className = "warning";
-                outputDiv.innerHTML = `
-                    <strong>Iframe Block Detected!</strong><br><br>
-                    You are running this inside an online editor. Your browser automatically blocks location tracking inside these preview windows for security.<br><br>
-                    <em>To test this, you must host the file on a real web server (like GitHub Pages).</em>
-                `;
+                outputDiv.innerHTML = `<strong>Iframe Block Detected!</strong><br>You are running this inside an online editor. Host the file on a real web server.`;
                 return; 
             }
 
@@ -89,14 +85,15 @@
             }
 
             // If all checks pass, request location
-            outputDiv.innerHTML = "Requesting location...";
+            outputDiv.innerHTML = "Requesting location... Please wait.";
             outputDiv.className = "";
 
             if (navigator.geolocation) {
+                // UPDATED: Relaxed settings to prevent timeout
                 navigator.geolocation.getCurrentPosition(showPosition, showError, {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
+                    enableHighAccuracy: false, // Uses Wi-Fi/Cell towers if GPS is slow
+                    timeout: 30000,            // Increased wait time to 30 seconds
+                    maximumAge: 10000          // Allows slightly older cached locations
                 });
             } else {
                 outputDiv.innerHTML = "Geolocation is not supported by your browser.";
@@ -122,18 +119,17 @@
                 case error.PERMISSION_DENIED:
                     outputDiv.innerHTML = `
                         <strong>Permission Denied.</strong><br>
-                        You blocked the request, your Brave Shields blocked it, or your device GPS is turned off.
+                        You blocked the request, or your device GPS is turned off.
                     `;
-                    // Redirect to settings attempt
                     setTimeout(() => {
                         window.location.href = "intent://#Intent;action=android.settings.LOCATION_SOURCE_SETTINGS;end";
                     }, 1500);
                     break;
                 case error.POSITION_UNAVAILABLE:
-                    outputDiv.innerHTML = "Location information is unavailable. Ensure GPS is active.";
+                    outputDiv.innerHTML = "Location information is unavailable. Ensure your device GPS is active.";
                     break;
                 case error.TIMEOUT:
-                    outputDiv.innerHTML = "The request timed out.";
+                    outputDiv.innerHTML = "The request timed out. Your phone took too long to find your location.";
                     break;
                 case error.UNKNOWN_ERROR:
                     outputDiv.innerHTML = "An unknown error occurred.";
